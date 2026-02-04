@@ -1,13 +1,17 @@
 import { APIEvent } from "@solidjs/start/server";
-import { db } from "~/db";
-import { projects, kanbanCards } from "~/db/schema";
-import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { projectRepository } from "~/db/repositories";
+import {
+  GetProjectsUseCase,
+  CreateProjectUseCase,
+  DeleteProjectUseCase,
+} from "~/use-cases";
+import { ValidationError, NotFoundError } from "~/use-cases/errors";
 
 export async function GET({ request }: APIEvent) {
   try {
-    const allProjects = await db.select().from(projects);
-    return Response.json(allProjects);
+    const useCase = new GetProjectsUseCase(projectRepository);
+    const result = await useCase.execute();
+    return Response.json(result.projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
     return Response.json(
@@ -25,29 +29,14 @@ export async function POST({ request }: APIEvent) {
     const body = await request.json();
     const { name, filePath } = body;
 
-    if (!name || !filePath) {
-      return Response.json(
-        { error: "Name and filePath are required" },
-        { status: 400 }
-      );
-    }
+    const useCase = new CreateProjectUseCase(projectRepository);
+    const result = await useCase.execute({ name, filePath });
 
-    const id = randomUUID();
-    const now = new Date();
-
-    const newProject = await db
-      .insert(projects)
-      .values({
-        id,
-        name,
-        filePath,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-
-    return Response.json(newProject[0], { status: 201 });
+    return Response.json(result.project, { status: 201 });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
     console.error("Error creating project:", error);
     return Response.json(
       { error: "Failed to create project" },
@@ -61,31 +50,17 @@ export async function DELETE({ request }: APIEvent) {
     const body = await request.json();
     const { id } = body;
 
-    if (!id) {
-      return Response.json(
-        { error: "Project ID is required" },
-        { status: 400 }
-      );
-    }
+    const useCase = new DeleteProjectUseCase(projectRepository);
+    const result = await useCase.execute({ id });
 
-    // Check if project exists first
-    const existingProject = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, id))
-      .limit(1);
-    if (existingProject.length === 0) {
-      return Response.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    // Delete all cards associated with this project first
-    await db.delete(kanbanCards).where(eq(kanbanCards.projectId, id));
-
-    // Then delete the project itself
-    await db.delete(projects).where(eq(projects.id, id));
-
-    return Response.json({ success: true });
+    return Response.json(result);
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof NotFoundError) {
+      return Response.json({ error: error.message }, { status: 404 });
+    }
     console.error("Error deleting project:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;

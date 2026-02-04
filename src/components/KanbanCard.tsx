@@ -1,13 +1,6 @@
 import { createDraggable } from "@thisbeyond/solid-dnd";
 import { Component } from "solid-js";
-
-export interface Card {
-  id: string;
-  title: string | null;
-  description?: string | null;
-  columnId: string;
-  generatingTitle?: boolean;
-}
+import type { Card } from "~/api/cards";
 
 interface KanbanCardProps {
   card: Card;

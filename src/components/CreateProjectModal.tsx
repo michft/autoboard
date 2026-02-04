@@ -39,43 +39,6 @@ const CreateProjectModal: Component<CreateProjectModalProps> = (props) => {
     }
   };
 
-  const handleBrowseFolder = async () => {
-    try {
-      if (!("showDirectoryPicker" in window)) {
-        alert(
-          "Directory selection is not supported in this browser. Please enter the full absolute path manually (e.g., /Users/you/projects/my-app)."
-        );
-        return;
-      }
-
-      const directoryHandle = await (window as any).showDirectoryPicker({
-        mode: "read",
-      });
-
-      // Note: Browser File System Access API cannot provide the full filesystem path
-      // for security reasons. We can only get the directory name.
-      const dirName = directoryHandle.name;
-
-      // Auto-populate project name with directory name
-      if (!name().trim()) {
-        setName(dirName);
-      }
-
-      // Alert user that they need to enter the full path manually
-      alert(
-        `Selected folder: "${dirName}"\n\nFor security reasons, browsers cannot provide the full path. Please enter the complete absolute path manually (e.g., /Users/you/projects/${dirName}).`
-      );
-    } catch (error: any) {
-      // User cancelled the dialog or an error occurred
-      if (error.name !== "AbortError" && error.name !== "NotAllowedError") {
-        console.error("Error browsing for folder:", error);
-        alert(
-          "Failed to browse for folder. Please enter the full absolute path manually."
-        );
-      }
-    }
-  };
-
   onMount(() => {
     if (typeof document !== "undefined") {
       document.addEventListener("keydown", handleEscape);
@@ -112,34 +75,24 @@ const CreateProjectModal: Component<CreateProjectModalProps> = (props) => {
                 <label for="project-path" class="modal-label">
                   Project Folder Path <span class="required">*</span>
                 </label>
-                <div class="modal-input-group">
-                  <input
-                    id="project-path"
-                    type="text"
-                    class="modal-input modal-input--with-button"
-                    value={filePath()}
-                    onInput={(e) => {
-                      const path = e.currentTarget.value;
-                      setFilePath(path);
-                      // Auto-populate project name if not already set
-                      if (!name().trim() && path.trim()) {
-                        const dirName = extractDirectoryName(path.trim());
-                        setName(dirName);
-                      }
-                    }}
-                    placeholder="Enter full absolute path (e.g., /Users/you/projects/my-app)"
-                    required
-                    autofocus
-                  />
-                  <button
-                    type="button"
-                    class="modal-browse-button"
-                    onClick={handleBrowseFolder}
-                    title="Browse for folder"
-                  >
-                    Browse
-                  </button>
-                </div>
+                <input
+                  id="project-path"
+                  type="text"
+                  class="modal-input"
+                  value={filePath()}
+                  onInput={(e) => {
+                    const path = e.currentTarget.value;
+                    setFilePath(path);
+                    // Auto-populate project name if not already set
+                    if (!name().trim() && path.trim()) {
+                      const dirName = extractDirectoryName(path.trim());
+                      setName(dirName);
+                    }
+                  }}
+                  placeholder="/Users/you/projects/my-app"
+                  required
+                  autofocus
+                />
               </div>
               <div class="modal-field">
                 <label for="project-name" class="modal-label">

@@ -1,4 +1,10 @@
-import { Component, createSignal, onMount, onCleanup, createEffect } from "solid-js";
+import {
+  Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  createEffect,
+} from "solid-js";
 
 interface CreateCardModalProps {
   isOpen: boolean;

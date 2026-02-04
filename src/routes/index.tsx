@@ -3,34 +3,7 @@ import { createSignal, createResource, onMount, Show } from "solid-js";
 import KanbanBoard from "~/components/KanbanBoard";
 import TopBar from "~/components/TopBar";
 import CreateProjectModal from "~/components/CreateProjectModal";
-
-interface Project {
-  id: string;
-  name: string;
-  filePath: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const fetchProjects = async (): Promise<Project[]> => {
-  // Only fetch on client side
-  if (typeof window === "undefined") {
-    return [];
-  }
-  try {
-    const response = await fetch("/api/projects");
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-      console.error("Failed to fetch projects:", errorData);
-      throw new Error(errorData.error || `Failed to fetch projects: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    throw error;
-  }
-};
+import { getProjects, createProject, deleteProject, type Project } from "~/api";
 
 export default function Home() {
   const [selectedProjectId, setSelectedProjectId] = createSignal<string | null>(null);
@@ -47,7 +20,7 @@ export default function Home() {
       }
       return refreshKey();
     },
-    fetchProjects,
+    getProjects,
     { initialValue: [] }
   );
 
@@ -63,22 +36,7 @@ export default function Home() {
     if (typeof window === "undefined") return;
     
     try {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          filePath,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create project");
-      }
-
-      const newProject = await response.json();
+      const newProject = await createProject(name, filePath);
       setIsCreateModalOpen(false);
       setRefreshKey((k) => k + 1);
       setSelectedProjectId(newProject.id);
@@ -91,30 +49,21 @@ export default function Home() {
   const handleDeleteProject = async (projectId: string): Promise<void> => {
     if (typeof window === "undefined") return;
     
-    const response = await fetch("/api/projects", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: projectId,
-      }),
-    });
+    try {
+      await deleteProject(projectId);
+      
+      // If the deleted project was selected, clear selection
+      if (selectedProjectId() === projectId) {
+        setSelectedProjectId(null);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-      console.error("Failed to delete project:", errorData);
-      const errorMessage = errorData.error || "Failed to delete project. Please try again.";
+      setRefreshKey((k) => k + 1);
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete project. Please try again.";
       alert(errorMessage);
-      throw new Error(errorMessage);
+      throw error;
     }
-
-    // If the deleted project was selected, clear selection
-    if (selectedProjectId() === projectId) {
-      setSelectedProjectId(null);
-    }
-
-    setRefreshKey((k) => k + 1);
   };
 
   // Trigger fetch on client mount and auto-select first project

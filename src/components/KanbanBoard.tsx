@@ -5,7 +5,10 @@ import {
 } from "@thisbeyond/solid-dnd";
 import { Component, createSignal, createResource, For, Show } from "solid-js";
 import KanbanColumn from "./KanbanColumn";
-import { Card, CardContent } from "./KanbanCard";
+import { CardContent } from "./KanbanCard";
+import type { Card } from "~/api/cards";
+import { getCards, createCard, updateCard, deleteCard } from "~/api/cards";
+import { generateTitle } from "~/api/generate-title";
 import CreateCardModal from "./CreateCardModal";
 import FloatingActionButton from "./FloatingActionButton";
 
@@ -19,18 +22,6 @@ interface KanbanBoardProps {
   projectId: string | null;
 }
 
-const fetchCards = async (projectId: string | null): Promise<Card[]> => {
-  if (!projectId || typeof window === "undefined") {
-    return [];
-  }
-  const url = `/api/cards?projectId=${encodeURIComponent(projectId)}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch cards");
-  }
-  const data = await response.json();
-  return data;
-};
 
 const KanbanBoard: Component<KanbanBoardProps> = (props) => {
   const columns: Column[] = [
@@ -54,7 +45,7 @@ const KanbanBoard: Component<KanbanBoardProps> = (props) => {
       }
       return [refreshKey(), pid] as const;
     },
-    ([, projectId]) => fetchCards(projectId),
+    ([, projectId]) => getCards(projectId),
     { initialValue: [] }
   );
 
@@ -78,18 +69,7 @@ const KanbanBoard: Component<KanbanBoardProps> = (props) => {
     if (typeof window === "undefined") return;
 
     try {
-      const response = await fetch("/api/cards", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: cardId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete card");
-      }
-
+      await deleteCard(cardId);
       // Refresh the cards list after successful deletion
       refetch();
     } catch (error) {
@@ -112,21 +92,7 @@ const KanbanBoard: Component<KanbanBoardProps> = (props) => {
 
     // Update in database
     try {
-      const response = await fetch("/api/cards", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: cardId,
-          columnId: newColumnId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update card");
-      }
-
+      await updateCard(cardId, { columnId: newColumnId });
       // Refresh to ensure consistency
       refetch();
     } catch (error) {
@@ -150,24 +116,12 @@ const KanbanBoard: Component<KanbanBoardProps> = (props) => {
     }
 
     try {
-      const response = await fetch("/api/cards", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          columnId,
-          projectId: pid,
-        }),
+      const newCard = await createCard({
+        title: title || undefined,
+        description,
+        columnId,
+        projectId: pid,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to create card");
-      }
-
-      const newCard = await response.json();
       setIsModalOpen(false);
       refetch();
 
@@ -176,18 +130,7 @@ const KanbanBoard: Component<KanbanBoardProps> = (props) => {
         setGeneratingTitles((prev) => new Set(prev).add(newCard.id));
         
         try {
-          const titleResponse = await fetch("/api/generate-title", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ cardId: newCard.id }),
-          });
-
-          if (!titleResponse.ok) {
-            throw new Error("Failed to generate title");
-          }
-
+          await generateTitle(newCard.id);
           // Refresh cards to get the updated title
           refetch();
         } catch (error) {
