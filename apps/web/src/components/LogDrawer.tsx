@@ -14,6 +14,7 @@ import {
   subscribeToCardLogs,
   sendCardInput,
 } from "~/api/card-logs";
+import { cancelRun } from "~/api/run-card";
 
 const LOG_TYPE_STYLES: Record<string, { label: string; borderColor: string }> = {
   assistant_text: { label: "Assistant", borderColor: "#4a9eff" },
@@ -173,6 +174,15 @@ export default function LogDrawer() {
     return "Waiting for agent...";
   };
 
+  const handleStop = async () => {
+    if (!cardId) return;
+    try {
+      await cancelRun(cardId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   if (!cardId) return null;
 
   return (
@@ -254,10 +264,23 @@ export default function LogDrawer() {
         </div>
 
         <div className="log-drawer__footer">
-          {isRunning && !needsInput && (
-            <div className="log-drawer__running-indicator">
-              <span className="log-drawer__spinner" />
-              <span>Agent is working...</span>
+          {isRunning && (
+            <div className="log-drawer__running-row">
+              {!needsInput && (
+                <div className="log-drawer__running-indicator">
+                  <span className="log-drawer__spinner" />
+                  <span>Agent is working...</span>
+                </div>
+              )}
+              <button
+                type="button"
+                className="log-drawer__stop"
+                onClick={handleStop}
+                aria-label="Stop agent"
+                title="Stop agent"
+              >
+                Stop
+              </button>
             </div>
           )}
           <div className="log-drawer__input-row">

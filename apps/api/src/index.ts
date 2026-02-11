@@ -12,6 +12,7 @@ import { createRunCardController } from "./controllers/run-card-controller.js";
 import { createCardLogsController } from "./controllers/card-logs-controller.js";
 import { createAutoModeController } from "./controllers/auto-mode-controller.js";
 import { createGenerateTitleController } from "./controllers/generate-title-controller.js";
+import { createPlanGenerationController } from "./controllers/plan-generation-controller.js";
 
 const app = new Hono();
 
@@ -28,6 +29,10 @@ const autoMode = createAutoModeController(
   autoModeLoop
 );
 const generateTitle = createGenerateTitleController(
+  cardRepository,
+  projectRepository
+);
+const planGeneration = createPlanGenerationController(
   cardRepository,
   projectRepository
 );
@@ -59,6 +64,9 @@ api.post("/auto-mode", autoMode.post);
 api.patch("/auto-mode", autoMode.patch);
 
 api.post("/generate-title", generateTitle.post);
+api.post("/plan-generation", planGeneration.post);
+api.get("/plan-generation/status", planGeneration.get);
+api.delete("/plan-generation", planGeneration.delete);
 
 app.route("/api", api);
 

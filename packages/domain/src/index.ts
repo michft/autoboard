@@ -17,14 +17,26 @@ export type {
 export { GetProjectsUseCase } from "./get-projects.js";
 export type { GetProjectsResult } from "./get-projects.js";
 export { CreateProjectUseCase } from "./create-project.js";
-export type { CreateProjectInput, CreateProjectResult } from "./create-project.js";
+export type {
+  CreateProjectInput,
+  CreateProjectResult,
+} from "./create-project.js";
 export { DeleteProjectUseCase } from "./delete-project.js";
-export type { DeleteProjectInput, DeleteProjectResult } from "./delete-project.js";
+export type {
+  DeleteProjectInput,
+  DeleteProjectResult,
+} from "./delete-project.js";
 export { UpdateProjectUseCase } from "./update-project.js";
-export type { UpdateProjectInput, UpdateProjectResult } from "./update-project.js";
+export type {
+  UpdateProjectInput,
+  UpdateProjectResult,
+} from "./update-project.js";
 
 export { StartCardRunUseCase } from "./start-card-run.js";
-export type { StartCardRunInput, StartCardRunResult } from "./start-card-run.js";
+export type {
+  StartCardRunInput,
+  StartCardRunResult,
+} from "./start-card-run.js";
 export { GetCardRunStatusUseCase } from "./get-card-run-status.js";
 export type {
   GetCardRunStatusInput,
@@ -42,8 +54,14 @@ export type {
   GenerateCardTitleResult,
 } from "./generate-card-title.js";
 
+export { GeneratePlanUseCase } from "./generate-plan.js";
+export type { GeneratePlanInput, GeneratePlanResult } from "./generate-plan.js";
+
 export { ToggleAutoModeUseCase } from "./toggle-auto-mode.js";
-export type { ToggleAutoModeInput, ToggleAutoModeResult } from "./toggle-auto-mode.js";
+export type {
+  ToggleAutoModeInput,
+  ToggleAutoModeResult,
+} from "./toggle-auto-mode.js";
 export { SetAutoModeConcurrencyUseCase } from "./set-auto-mode-concurrency.js";
 export type {
   SetAutoModeConcurrencyInput,

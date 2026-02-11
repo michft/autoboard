@@ -6,6 +6,7 @@ interface KanbanCardProps {
   card: Card;
   onDelete: (cardId: string) => void;
   onArchive?: (cardId: string) => void;
+  onStopCard?: (cardId: string) => void;
   onClick?: () => void;
 }
 
@@ -60,6 +61,11 @@ export default function KanbanCard(props: KanbanCardProps) {
     props.onArchive?.(props.card.id);
   };
 
+  const handleStop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    props.onStopCard?.(props.card.id);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest(".kanban-card__actions")) return;
@@ -81,6 +87,18 @@ export default function KanbanCard(props: KanbanCardProps) {
         <CardContent card={props.card} />
       </div>
       <div className="kanban-card__actions">
+        {props.card.isRunning && props.onStopCard && (
+          <button
+            className="kanban-card__stop"
+            onClick={handleStop}
+            aria-label="Stop agent"
+            title="Stop agent"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" />
+            </svg>
+          </button>
+        )}
         {props.onArchive && props.card.columnId !== "manual-review" && (
           <button
             className="kanban-card__archive"

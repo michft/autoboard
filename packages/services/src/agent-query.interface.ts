@@ -20,12 +20,16 @@ export interface AgentMessage {
   [key: string]: unknown;
 }
 
+/** MCP server config (e.g. from createSdkMcpServer). Typed loosely to avoid pulling SDK into interface. */
+export type McpServerConfig = Record<string, unknown>;
+
 export interface AgentQueryOptions {
   prompt: string;
   model: string;
   cwd: string;
   maxTurns?: number;
   allowedTools?: string[];
+  mcpServers?: Record<string, McpServerConfig>;
   permissionMode?: string;
   allowDangerouslySkipPermissions?: boolean;
   env?: Record<string, string | undefined>;
@@ -41,5 +45,7 @@ export type AgentQuery = {
 
 export interface IAgentCodeQuery {
   query(options: AgentQueryOptions): AsyncGenerator<AgentMessage>;
-  createQuery(options: AgentQueryOptions & { enableUserInput?: boolean }): AgentQuery;
+  createQuery(
+    options: AgentQueryOptions & { enableUserInput?: boolean }
+  ): AgentQuery;
 }

@@ -2,7 +2,11 @@
  * Claude Provider - Implementation of IAgentCodeQuery interface.
  */
 
-import { query, type Options, type PermissionMode } from "@anthropic-ai/claude-agent-sdk";
+import {
+  query,
+  type Options,
+  type PermissionMode,
+} from "@anthropic-ai/claude-agent-sdk";
 import type {
   IAgentCodeQuery,
   AgentQueryOptions,
@@ -54,6 +58,7 @@ class ClaudeProvider implements IAgentCodeQuery {
       cwd,
       maxTurns = 1,
       allowedTools = [],
+      mcpServers,
       permissionMode = "bypassPermissions",
       allowDangerouslySkipPermissions = true,
       env = buildEnv(),
@@ -73,6 +78,10 @@ class ClaudeProvider implements IAgentCodeQuery {
       ...(systemPrompt && { systemPrompt }),
       ...(abortController && { abortController }),
       ...(resume && { resume }),
+      ...(mcpServers &&
+        Object.keys(mcpServers).length > 0 && {
+          mcpServers: mcpServers as Options["mcpServers"],
+        }),
     };
 
     const stream = query({ prompt, options: sdkOptions });
@@ -81,13 +90,16 @@ class ClaudeProvider implements IAgentCodeQuery {
     }
   }
 
-  createQuery(options: AgentQueryOptions & { enableUserInput?: boolean }): AgentQuery {
+  createQuery(
+    options: AgentQueryOptions & { enableUserInput?: boolean }
+  ): AgentQuery {
     const {
       prompt,
       model,
       cwd,
       maxTurns = 500,
       allowedTools = [],
+      mcpServers,
       permissionMode = "bypassPermissions",
       allowDangerouslySkipPermissions = true,
       env = buildEnv(),
@@ -97,7 +109,9 @@ class ClaudeProvider implements IAgentCodeQuery {
       enableUserInput,
     } = options;
 
-    const tools = enableUserInput ? [...allowedTools, "AskUserQuestion"] : allowedTools;
+    const tools = enableUserInput
+      ? [...allowedTools, "AskUserQuestion"]
+      : allowedTools;
     const sdkOptions: Options = {
       model,
       cwd,
@@ -109,6 +123,10 @@ class ClaudeProvider implements IAgentCodeQuery {
       ...(systemPrompt && { systemPrompt }),
       ...(abortController && { abortController }),
       ...(resume && { resume }),
+      ...(mcpServers &&
+        Object.keys(mcpServers).length > 0 && {
+          mcpServers: mcpServers as Options["mcpServers"],
+        }),
     };
 
     const sdkQuery = query({ prompt, options: sdkOptions });

@@ -78,6 +78,14 @@ class AutoModeLoop implements IAutoModeLoop {
         return;
       }
 
+      // 1. Fetch cards first (needed for both counting and picking)
+      const allCards = await cardRepository.getCardsByProjectId(projectId);
+      const inProgressCards = allCards.filter((c) => c.columnId === "in-progress");
+
+      // 2. Sync activeCardIds: add DB in-progress cards, remove completed/error from cardRunStateService
+      for (const card of inProgressCards) {
+        state.activeCardIds.add(card.id);
+      }
       for (const cardId of state.activeCardIds) {
         const run = cardRunStateService.getRun(cardId);
         if (!run || run.status === "completed" || run.status === "error") {
@@ -85,10 +93,10 @@ class AutoModeLoop implements IAutoModeLoop {
         }
       }
 
-      const availableSlots = settings.maxConcurrency - state.activeCardIds.size;
+      // 3. Use DB count for available slots (source of truth)
+      const availableSlots = settings.maxConcurrency - inProgressCards.length;
       if (availableSlots <= 0) return;
 
-      const allCards = await cardRepository.getCardsByProjectId(projectId);
       const todoCards = allCards.filter((c) => c.columnId === "todo");
       const cardsToRun = todoCards.slice(0, availableSlots);
 
