@@ -10,6 +10,17 @@
     "declarationMap": true,
     "skipLibCheck": true
   },
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../services"
+    },
+    {
+      "path": "../db"
+    }
+  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

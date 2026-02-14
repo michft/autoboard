@@ -18,13 +18,37 @@ pnpm install
 pnpm dev
 ```
 
-Runs the API (port 3001) and the web app (Vite). The web app proxies `/api` to the API.
+Runs the API (port 3001) and the web app (Vite). The web app proxies `/api`
+to the API.
 
 ## Building
 
 ```bash
 pnpm build
 ```
+
+Before you run `pnpm dev`, make sure the shared packages that the API imports
+are built so Node can resolve their `dist` entry points. Run the database and
+domain builds first and then start the workspace dev server:
+
+```bash
+pnpm --filter @autoboard/db build
+pnpm --filter @autoboard/domain build
+pnpm dev
+```
+
+If you ever switch Node versions (for example upgrading past v22),
+rebuild native bindings before starting the server so `better-sqlite3`
+re-compiles for the current `NODE_MODULE_VERSION`:
+
+```bash
+pnpm rebuild better-sqlite3
+```
+
+When working in development you may also see `pnpm` warn about deprecated
+`@esbuild-kit/core-utils`/`@esbuild-kit/esm-loader`; they are pulled in by
+`drizzle-kit` and safe to ignore for now, but keep an eye on future kit
+releases or use a local patch/override if you want to silence the warning.
 
 ## Database
 
