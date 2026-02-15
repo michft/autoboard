@@ -61,6 +61,28 @@ pnpm db:push       # push schema
 pnpm db:studio     # Drizzle Studio
 ```
 
+## Seeding tasks from a YAML plan
+
+`seed-tasks-sqlite.mjs` lives under `scripts/` and imports TODOs from YAML plans into `packages/db/drizzle/db.sqlite`. Run it from the workspace root so pnpm can resolve native modules such as `better-sqlite3` before the script executes:
+
+```bash
+pnpm install
+pnpm exec node scripts/seed-tasks-sqlite.mjs \
+  --file=~/PATH-TO/plans/tasks.yaml \
+  --project-path=~/PATH-TO-PROJECT-REPO \
+  --dry-run
+```
+
+Use the script's built-in `--help` for the full list of flags, common options include:
+
+- `--file` / `--tasks` (required): path to the YAML plan
+- `--project-path`, `--project-name`, `--project-id`: choose the target project
+- `--column`: Kanban column (`todo` by default)
+- `--include-completed`: insert tasks already marked complete
+- `--dry-run`: preview inserts without changing the database
+
+Because it is not published as a bin, run it through `pnpm exec node scripts/seed-tasks-sqlite.mjs` (or from any package that depends on `better-sqlite3`).
+
 ## Engine
 
 Node.js >= 22.
